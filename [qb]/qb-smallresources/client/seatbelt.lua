@@ -17,6 +17,9 @@ local modifierDensity = true
 local lastVeh = nil
 local veloc
 
+-- Flag to prevent multiple SeatBeltLoop threads from running
+local seatbeltLoopRunning = false
+
 -- Functions
 
 local function ejectFromVehicle()
@@ -36,6 +39,9 @@ local function ejectFromVehicle()
 end
 
 local function toggleSeatbelt()
+    -- Prevent multiple SeatBeltLoop threads from running simultaneously
+    if seatbeltLoopRunning then return end
+    seatbeltLoopRunning = true
     seatbeltOn = not seatbeltOn
     SeatBeltLoop()
     TriggerEvent("seatbelt:client:ToggleSeatbelt", seatbeltOn)
@@ -55,6 +61,7 @@ end
 
 function SeatBeltLoop()
     CreateThread(function()
+        seatbeltLoopRunning = true
         while true do
             sleep = 0
             if seatbeltOn or harnessOn then
@@ -65,9 +72,13 @@ function SeatBeltLoop()
                 seatbeltOn = false
                 harnessOn = false
                 TriggerEvent("seatbelt:client:ToggleSeatbelt", seatbeltOn)
+                seatbeltLoopRunning = false
                 break
             end
-            if not seatbeltOn and not harnessOn then break end
+            if not seatbeltOn and not harnessOn then
+                seatbeltLoopRunning = false
+                break
+            end
             Wait(sleep)
         end
     end)

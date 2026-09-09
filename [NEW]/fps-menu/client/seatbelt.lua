@@ -17,6 +17,9 @@ local modifierDensity = true
 local lastVehicle = nil
 local veloc
 
+-- Flag to prevent multiple SeatBeltLoop threads from running
+local seatbeltLoopRunning = false
+
 -- Functions
 
 local function EjectFromVehicle()
@@ -36,6 +39,9 @@ local function EjectFromVehicle()
 end
 
 local function ToggleSeatbelt()
+    -- Prevent multiple threads from running
+    if seatbeltLoopRunning then return end
+    seatbeltLoopRunning = true
     seatbeltOn = not seatbeltOn
     TriggerEvent("seatbelt:client:ToggleSeatbelt")
     TriggerServerEvent("InteractSound_SV:PlayOnSource", seatbeltOn and "carbuckle" or "carunbuckle", 0.25)
